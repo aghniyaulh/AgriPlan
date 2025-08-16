@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform RAB & Analisis Usaha Tani - Kabupaten Tuban</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-bg-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .gradient-bg-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .card-shadow { box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .input-focus:focus { box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .login-bg { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .floating { animation: floating 6s ease-in-out infinite; }
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, -20px); }
+            100% { transform: translate(0, -0px); }
+        }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stats-card { transition: all 0.3s ease; }
+        .stats-card:hover { transform: translateY(-5px); }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-6 shadow-lg">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold">🌾 AgriPlan Tuban</h1>
+                    <p class="text-blue-100 mt-1">Platform RAB & Analisis Usaha Tani Kabupaten Tuban</p>
+                </div>
+                <div class="text-right">
+                    <div id="userInfo" class="hidden">
+                        <p class="text-sm text-blue-100" id="userRole"></p>
+                        <p class="font-semibold" id="userName"></p>
+                        <button onclick="logout()" class="text-xs text-blue-200 hover:text-white mt-1">
+                            🚪 Logout
+                        </button>
+                    </div>
+                    <div id="dateInfo">
+                        <p class="text-sm text-blue-100">Update Harga Terkini</p>
+                        <p class="font-semibold" id="currentDate"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-lg card-shadow mb-8">
+            <div class="flex border-b">
+                <button onclick="showTab('beranda')" id="tab-beranda" class="px-6 py-4 font-semibold text-blue-600 border-b-2 border-blue-600">
+                    🏠 Beranda
+                </button>
+                <button onclick="showTab('rab')" id="tab-rab" class="px-6 py-4 font-semibold text-gray-500 hover:text-blue-600">
+                    📊 Rancangan Anggaran Biaya
+                </button>
+                <button onclick="showTab('analisis')" id="tab-analisis" class="px-6 py-4 font-semibold text-gray-500 hover:text-blue-600">
+                    📈 Analisis Kelayakan
+                </button>
+                <button onclick="showTab('harga')" id="tab-harga" class="px-6 py-4 font-semibold text-gray-500 hover:text-blue-600 hidden">
+                    💰 Update Harga Input
+                </button>
+                <button onclick="showTab('daftar')" id="tab-daftar" class="px-6 py-4 font-semibold text-gray-500 hover:text-blue-600 hidden">
+                    👥 Daftar Akun
+                </button>
+            </div>
+        </div>
+
+        <!-- Beranda Tab -->
+        <div id="beranda-content" class="tab-content">
+            <div class="slide-in">
+                <!-- Welcome Section -->
+                <div class="gradient-bg-2 rounded-xl p-8 mb-8 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-3xl font-bold mb-2">Selamat Datang di AgriPlan Tuban! 🌾</h2>
+                            <p class="text-blue-100 text-lg" id="welcomeMessage">Platform digital untuk perencanaan usaha tani yang lebih efisien</p>
+                        </div>
+                        <div class="floating">
+                            <div class="text-6xl">🚜</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stats-card bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <span class="text-2xl">🌱</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600 text-sm">Total Petani</p>
+                                <p class="text-2xl font-bold text-green-600">1,247</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <span class="text-2xl">📊</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600 text-sm">RAB Dibuat</p>
+                                <p class="text-2xl font-bold text-blue-600">3,456</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 p-3 rounded-full">
+                                <span class="text-2xl">📈</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600 text-sm">Analisis Selesai</p>
+                                <p class="text-2xl font-bold text-purple-600">2,189</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card bg-white rounded-xl p-6 card-shadow">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 p-3 rounded-full">
+                                <span class="text-2xl">🏆</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600 text-sm">Usaha Layak</p>
+                                <p class="text-2xl font-bold text-yellow-600">89%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl p-6 card-shadow hover:shadow-2xl transition-all duration-300">
+                        <div class="text-center">
+                            <div class="bg-gradient-to-r from-blue-500 to-purple-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">📊</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Buat RAB Baru</h3>
+                            <p class="text-gray-600 mb-4">Mulai perencanaan anggaran biaya usaha tani Anda</p>
+                            <button onclick="showTab('rab')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                                Mulai Sekarang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 card-shadow hover:shadow-2xl transition-all duration-300">
+                        <div class="text-center">
+                            <div class="bg-gradient-to-r from-green-500 to-teal-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">📈</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Analisis Kelayakan</h3>
+                            <p class="text-gray-600 mb-4">Evaluasi kelayakan finansial usaha tani Anda</p>
+                            <button onclick="showTab('analisis')" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                                Analisis Sekarang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl p-6 card-shadow hover:shadow-2xl transition-all duration-300" id="updateHargaCard">
+                        <div class="text-center">
+                            <div class="bg-gradient-to-r from-orange-500 to-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">💰</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Update Harga</h3>
+                            <p class="text-gray-600 mb-4">Kelola harga input produksi terkini</p>
+                            <button onclick="showTab('harga')" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors">
+                                Update Harga
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Updates -->
+                <div class="bg-white rounded-xl p-6 card-shadow">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">📢 Informasi Terkini</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start p-4 bg-blue-50 rounded-lg">
+                            <div class="bg-blue-500 text-white p-2 rounded-full mr-4">
+                                <span class="text-sm">📊</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-blue-800">Update Harga Input Februari 2024</h4>
+                                <p class="text-blue-600 text-sm">Harga pupuk urea naik 5% dari bulan sebelumnya. Silakan update RAB Anda.</p>
+                                <p class="text-xs text-blue-500 mt-1">2 hari yang lalu</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start p-4 bg-green-50 rounded-lg">
+                            <div class="bg-green-500 text-white p-2 rounded-full mr-4">
+                                <span class="text-sm">🌾</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-green-800">Program Bantuan Benih Padi</h4>
+                                <p class="text-green-600 text-sm">Dinas Pertanian Tuban membuka program bantuan benih padi varietas unggul.</p>
+                                <p class="text-xs text-green-500 mt-1">1 minggu yang lalu</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start p-4 bg-purple-50 rounded-lg">
+                            <div class="bg-purple-500 text-white p-2 rounded-full mr-4">
+                                <span class="text-sm">🎓</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-purple-800">Pelatihan Analisis Usaha Tani</h4>
+                                <p class="text-purple-600 text-sm">Webinar gratis tentang cara menggunakan platform AgriPlan Tuban.</p>
+                                <p class="text-xs text-purple-500 mt-1">2 minggu yang lalu</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RAB Tab -->
+        <div id="rab-content" class="tab-content">
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Form Input -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg card-shadow p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Informasi Usaha Tani</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Petani</label>
+                                <input type="text" id="namaPetani" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" placeholder="Masukkan nama petani">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Kecamatan</label>
+                                <select id="kecamatan" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus">
+                                    <option value="">Pilih Kecamatan</option>
+                                    <option value="Tuban">Tuban</option>
+                                    <option value="Jenu">Jenu</option>
+                                    <option value="Merakurak">Merakurak</option>
+                                    <option value="Rengel">Rengel</option>
+                                    <option value="Semanding">Semanding</option>
+                                    <option value="Singgahan">Singgahan</option>
+                                    <option value="Montong">Montong</option>
+                                    <option value="Parengan">Parengan</option>
+                                    <option value="Soko">Soko</option>
+                                    <option value="Plumpang">Plumpang</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Tanaman</label>
+                                <select id="jenisTanaman" onchange="updateDefaultItems()" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus">
+                                    <option value="">Pilih Tanaman</option>
+                                    <option value="Padi">Padi</option>
+                                    <option value="Jagung">Jagung</option>
+                                    <option value="Kedelai">Kedelai</option>
+                                    <option value="Cabai">Cabai</option>
+                                    <option value="Tomat">Tomat</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Luas Lahan (Ha)</label>
+                                <input type="number" id="luasLahan" step="0.1" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" placeholder="0.5">
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Input Biaya Produksi</h3>
+                        
+                        <!-- Price Reference Search -->
+                        <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                            <h4 class="font-semibold text-blue-800 mb-3">🔍 Cari Harga Acuan</h4>
+                            <div class="flex gap-3">
+                                <input type="text" id="priceSearchInput" 
+                                       class="flex-1 px-4 py-2 border border-blue-300 rounded-lg input-focus" 
+                                       placeholder="Ketik nama input untuk mencari harga acuan..."
+                                       onkeyup="searchPriceReference()">
+                                <button onclick="showAllPrices()" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
+                                    📋 Lihat Semua Harga
+                                </button>
+                            </div>
+                            <div id="priceSearchResults" class="mt-3 space-y-2 max-h-40 overflow-y-auto">
+                                <!-- Search results will appear here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Biaya Input -->
+                        <div class="space-y-4" id="biayaInputs">
+                            <!-- Dynamic inputs will be added here -->
+                        </div>
+
+                        <div class="mt-4 flex gap-3">
+                            <button onclick="addBiayaInput()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold">
+                                ➕ Tambah Item Biaya
+                            </button>
+                            <button onclick="loadTemplateItems()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold">
+                                📋 Muat Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg card-shadow p-6 sticky top-8">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Ringkasan RAB</h3>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between py-2 border-b">
+                                <span class="text-gray-600">Total Biaya Benih</span>
+                                <span class="font-semibold" id="totalBenih">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b">
+                                <span class="text-gray-600">Total Biaya Pupuk</span>
+                                <span class="font-semibold" id="totalPupuk">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b">
+                                <span class="text-gray-600">Total Biaya Pestisida</span>
+                                <span class="font-semibold" id="totalPestisida">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b">
+                                <span class="text-gray-600">Total Biaya Tenaga Kerja</span>
+                                <span class="font-semibold" id="totalTenagaKerja">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b">
+                                <span class="text-gray-600">Biaya Lainnya</span>
+                                <span class="font-semibold" id="totalLainnya">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between py-3 border-t-2 border-blue-200 bg-blue-50 px-3 rounded">
+                                <span class="font-bold text-blue-800">TOTAL BIAYA</span>
+                                <span class="font-bold text-blue-800 text-lg" id="totalBiaya">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 space-y-3">
+                            <button onclick="hitungAnalisis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
+                                📊 Hitung Analisis
+                            </button>
+                            <button onclick="exportToExcel()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold">
+                                📥 Download Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analisis Tab -->
+        <div id="analisis-content" class="tab-content hidden">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg card-shadow p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Input Penerimaan</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Produksi (Ton/Ha)</label>
+                            <input type="number" id="produksi" step="0.1" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" placeholder="5.5">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Jual (Rp/Kg)</label>
+                            <input type="number" id="hargaJual" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" placeholder="6500">
+                        </div>
+                        <button onclick="hitungKelayakan()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-semibold">
+                            🧮 Hitung Kelayakan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg card-shadow p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Hasil Analisis Kelayakan</h3>
+                    
+                    <div id="hasilAnalisis" class="space-y-4">
+                        <div class="text-center text-gray-500 py-8">
+                            Silakan isi data penerimaan dan klik "Hitung Kelayakan"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daftar Tab -->
+        <div id="daftar-content" class="tab-content hidden">
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white rounded-xl card-shadow p-8">
+                    <div class="text-center mb-8">
+                        <div class="bg-gradient-to-r from-green-500 to-blue-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-3xl text-white">👥</span>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Daftar Akun Baru</h2>
+                        <p class="text-gray-600">Bergabunglah dengan komunitas petani digital Kabupaten Tuban</p>
+                    </div>
+
+                    <form id="registerForm" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+                                <input type="text" id="regNama" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                                       placeholder="Masukkan nama lengkap" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <input type="email" id="regEmail" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                                       placeholder="contoh@email.com" required>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                                <input type="password" id="regPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                                       placeholder="Minimal 8 karakter" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Konfirmasi Password</label>
+                                <input type="password" id="regConfirmPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                                       placeholder="Ulangi password" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Daftar Sebagai</label>
+                            <select id="regRole" onchange="toggleKecamatanField()" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" required>
+                                <option value="">Pilih Peran</option>
+                                <option value="petani">👨‍🌾 Petani</option>
+                                <option value="penyuluh">👨‍🏫 Penyuluh Pertanian</option>
+                                <option value="admin">👨‍💼 Administrator</option>
+                            </select>
+                        </div>
+
+                        <div id="kecamatanField" class="hidden">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Kecamatan</label>
+                            <select id="regKecamatan" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus">
+                                <option value="">Pilih Kecamatan</option>
+                                <option value="Tuban">Tuban</option>
+                                <option value="Jenu">Jenu</option>
+                                <option value="Merakurak">Merakurak</option>
+                                <option value="Rengel">Rengel</option>
+                                <option value="Semanding">Semanding</option>
+                                <option value="Singgahan">Singgahan</option>
+                                <option value="Montong">Montong</option>
+                                <option value="Parengan">Parengan</option>
+                                <option value="Soko">Soko</option>
+                                <option value="Plumpang">Plumpang</option>
+                            </select>
+                        </div>
+
+                        <div id="wilayahField" class="hidden">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Wilayah Kerja</label>
+                            <input type="text" id="regWilayah" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                                   placeholder="Contoh: Kecamatan Tuban-Jenu">
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" id="agreeTerms" class="mr-3" required>
+                            <label for="agreeTerms" class="text-sm text-gray-600">
+                                Saya setuju dengan <a href="#" class="text-blue-600 hover:underline">syarat dan ketentuan</a> yang berlaku
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white py-3 rounded-lg font-semibold transition-all duration-300">
+                            🚀 Daftar Sekarang
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-gray-600">Sudah punya akun? 
+                            <button onclick="showLoginFromRegister()" class="text-blue-600 hover:underline font-semibold">Login di sini</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Harga Tab -->
+        <div id="harga-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Kelola Harga Input Usaha Tani</h2>
+                        <p class="text-gray-600 mt-2">Update harga input sesuai kondisi pasar terkini di Kabupaten Tuban</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="bg-blue-50 px-4 py-2 rounded-lg">
+                            <p class="text-sm text-blue-600 font-semibold">Update Terakhir</p>
+                            <p class="text-xs text-blue-500" id="lastUpdateTime">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Admin Controls -->
+                <div id="adminControls" class="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg mb-6 hidden">
+                    <h3 class="font-bold text-purple-800 mb-3">🔧 Kontrol Administrator</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <button onclick="bulkUpdatePrices()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                            📊 Update Massal
+                        </button>
+                        <button onclick="importPricesFromExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                            📥 Import Excel
+                        </button>
+                        <button onclick="showPriceHistory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                            📈 Riwayat Harga
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search and Add New Input -->
+                <div class="mb-8 space-y-4">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">🔍 Cari Input Produksi</label>
+                            <input type="text" id="searchInput" onkeyup="filterHargaInputs()" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                                   placeholder="Ketik nama input untuk mencari...">
+                        </div>
+                        <div class="md:w-auto">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">&nbsp;</label>
+                            <button onclick="showTambahInputModal()" 
+                                    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold">
+                                ➕ Tambah Input Baru
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter by Category -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="filterByCategory('all')" id="filter-all" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+                            Semua
+                        </button>
+                        <button onclick="filterByCategory('Benih')" id="filter-Benih" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg text-sm font-medium">
+                            Benih
+                        </button>
+                        <button onclick="filterByCategory('Pupuk')" id="filter-Pupuk" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg text-sm font-medium">
+                            Pupuk
+                        </button>
+                        <button onclick="filterByCategory('Pestisida')" id="filter-Pestisida" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg text-sm font-medium">
+                            Pestisida
+                        </button>
+                        <button onclick="filterByCategory('Tenaga Kerja')" id="filter-Tenaga Kerja" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg text-sm font-medium">
+                            Tenaga Kerja
+                        </button>
+                        <button onclick="filterByCategory('Lainnya')" id="filter-Lainnya" 
+                                class="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg text-sm font-medium">
+                            Lainnya
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="hargaInputs">
+                    <!-- Price inputs will be generated here -->
+                </div>
+
+                <div class="mt-8 flex flex-wrap gap-4">
+                    <button onclick="resetHarga()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold">
+                        🔄 Reset ke Default
+                    </button>
+                    <button onclick="simpanHarga()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+                        💾 Simpan Perubahan
+                    </button>
+                    <button onclick="exportHargaToExcel()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold">
+                        📊 Export Daftar Harga
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Tambah Input Baru -->
+        <div id="tambahInputModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg max-w-md w-full p-6">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Tambah Input Produksi Baru</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori</label>
+                        <select id="newInputCategory" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus">
+                            <option value="Benih">Benih</option>
+                            <option value="Pupuk">Pupuk</option>
+                            <option value="Pestisida">Pestisida</option>
+                            <option value="Tenaga Kerja">Tenaga Kerja</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Input</label>
+                        <input type="text" id="newInputName" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                               placeholder="Contoh: Benih Padi Varietas IR64">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Harga (Rp)</label>
+                        <input type="number" id="newInputPrice" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                               placeholder="0" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Satuan</label>
+                        <input type="text" id="newInputUnit" class="w-full px-4 py-3 border border-gray-300 rounded-lg input-focus" 
+                               placeholder="kg, liter, paket, dll">
+                    </div>
+                </div>
+
+                <div class="mt-6 flex gap-3">
+                    <button onclick="closeTambahInputModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold">
+                        Batal
+                    </button>
+                    <button onclick="tambahInputBaru()" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold">
+                        Tambah
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 login-bg z-50 flex items-center justify-center p-4">
+        <div class="glass-effect rounded-2xl max-w-md w-full p-8 slide-in">
+            <div class="text-center mb-8">
+                <div class="floating">
+                    <div class="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <span class="text-3xl">🌾</span>
+                    </div>
+                </div>
+                <h2 class="text-3xl font-bold text-white mb-2">AgriPlan Tuban</h2>
+                <p class="text-blue-100">Masuk ke platform digital pertanian</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-semibold text-white mb-2">📧 Email</label>
+                    <input type="email" id="loginEmail" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 input-focus backdrop-blur-sm" 
+                           placeholder="Masukkan email Anda">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-white mb-2">🔒 Password</label>
+                    <input type="password" id="loginPassword" class="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-blue-200 input-focus backdrop-blur-sm" 
+                           placeholder="Masukkan password" onkeypress="handleLoginKeypress(event)">
+                </div>
+            </div>
+
+            <button onclick="login()" class="w-full mt-8 bg-white hover:bg-gray-100 text-blue-600 py-3 rounded-lg font-bold transition-all duration-300 shadow-lg">
+                🚀 Masuk Sekarang
+            </button>
+
+            <div class="mt-6 text-center">
+                <p class="text-blue-100 mb-4">Belum punya akun?</p>
+                <button onclick="showRegisterFromLogin()" class="text-white hover:text-blue-200 font-semibold underline">
+                    👥 Daftar Akun Baru
+                </button>
+            </div>
+
+            <div class="mt-8 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
+                <h4 class="font-semibold text-white mb-3 text-center">🎯 Akun Demo</h4>
+                <div class="text-sm text-blue-100 space-y-3">
+                    <div class="bg-white/10 p-3 rounded-lg">
+                        <p class="font-semibold text-white">👨‍🌾 Petani</p>
+                        <p>budi@petani.tuban.go.id</p>
+                        <p>Password: petani123</p>
+                    </div>
+                    <div class="bg-white/10 p-3 rounded-lg">
+                        <p class="font-semibold text-white">👨‍🏫 Penyuluh</p>
+                        <p>agus@penyuluh.tuban.go.id</p>
+                        <p>Password: penyuluh123</p>
+                    </div>
+                    <div class="bg-white/10 p-3 rounded-lg">
+                        <p class="font-semibold text-white">👨‍💼 Administrator</p>
+                        <p>admin@tuban.go.id</p>
+                        <p>Password: admin123</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // User management system
+        let currentUser = null;
+        
+        // Demo users database
+        const users = {
+            'budi@petani.tuban.go.id': {password: 'petani123', role: 'petani', name: 'Budi Santoso', kecamatan: 'Tuban'},
+            'siti@petani.tuban.go.id': {password: 'petani123', role: 'petani', name: 'Siti Aminah', kecamatan: 'Jenu'},
+            'ahmad@petani.tuban.go.id': {password: 'petani123', role: 'petani', name: 'Ahmad Wijaya', kecamatan: 'Rengel'},
+            'agus@penyuluh.tuban.go.id': {password: 'penyuluh123', role: 'penyuluh', name: 'Dr. Agus Purnomo', wilayah: 'Kabupaten Tuban'},
+            'sari@penyuluh.tuban.go.id': {password: 'penyuluh123', role: 'penyuluh', name: 'Ir. Sari Dewi', wilayah: 'Kecamatan Tuban-Jenu'},
+            'admin@tuban.go.id': {password: 'admin123', role: 'admin', name: 'Administrator Sistem', wilayah: 'Kabupaten Tuban'}
+        };
+
+        // Data harga default untuk Kabupaten Tuban dengan kategori dan satuan
+        let hargaData = {
+            'Benih Padi': {harga: 12000, kategori: 'Benih', satuan: 'kg'},
+            'Benih Jagung': {harga: 85000, kategori: 'Benih', satuan: 'kg'},
+            'Benih Kedelai': {harga: 18000, kategori: 'Benih', satuan: 'kg'},
+            'Benih Cabai': {harga: 450000, kategori: 'Benih', satuan: 'kg'},
+            'Benih Tomat': {harga: 380000, kategori: 'Benih', satuan: 'kg'},
+            'Urea': {harga: 2300, kategori: 'Pupuk', satuan: 'kg'},
+            'NPK': {harga: 2800, kategori: 'Pupuk', satuan: 'kg'},
+            'TSP': {harga: 3200, kategori: 'Pupuk', satuan: 'kg'},
+            'KCl': {harga: 4500, kategori: 'Pupuk', satuan: 'kg'},
+            'Pupuk Kandang': {harga: 800, kategori: 'Pupuk', satuan: 'kg'},
+            'Insektisida': {harga: 85000, kategori: 'Pestisida', satuan: 'liter'},
+            'Fungisida': {harga: 95000, kategori: 'Pestisida', satuan: 'liter'},
+            'Herbisida': {harga: 75000, kategori: 'Pestisida', satuan: 'liter'},
+            'Tenaga Kerja': {harga: 80000, kategori: 'Tenaga Kerja', satuan: 'HOK'},
+            'Sewa Traktor': {harga: 350000, kategori: 'Lainnya', satuan: 'paket'},
+            'BBM': {harga: 10000, kategori: 'Lainnya', satuan: 'liter'}
+        };
+
+        let currentFilter = 'all';
+        let priceHistory = JSON.parse(localStorage.getItem('priceHistory')) || [];
+
+        // Template default untuk setiap tanaman
+        const templateTanaman = {
+            'Padi': [
+                {kategori: 'Benih', item: 'Benih Padi', satuan: 'kg', jumlah: 25},
+                {kategori: 'Pupuk', item: 'Urea', satuan: 'kg', jumlah: 200},
+                {kategori: 'Pupuk', item: 'NPK', satuan: 'kg', jumlah: 150},
+                {kategori: 'Pupuk', item: 'Pupuk Kandang', satuan: 'kg', jumlah: 2000},
+                {kategori: 'Pestisida', item: 'Insektisida', satuan: 'liter', jumlah: 2},
+                {kategori: 'Pestisida', item: 'Herbisida', satuan: 'liter', jumlah: 3},
+                {kategori: 'Tenaga Kerja', item: 'Tenaga Kerja', satuan: 'HOK', jumlah: 45},
+                {kategori: 'Lainnya', item: 'Sewa Traktor', satuan: 'paket', jumlah: 2}
+            ],
+            'Jagung': [
+                {kategori: 'Benih', item: 'Benih Jagung', satuan: 'kg', jumlah: 20},
+                {kategori: 'Pupuk', item: 'Urea', satuan: 'kg', jumlah: 250},
+                {kategori: 'Pupuk', item: 'NPK', satuan: 'kg', jumlah: 200},
+                {kategori: 'Pestisida', item: 'Insektisida', satuan: 'liter', jumlah: 2},
+                {kategori: 'Tenaga Kerja', item: 'Tenaga Kerja', satuan: 'HOK', jumlah: 35}
+            ],
+            'Kedelai': [
+                {kategori: 'Benih', item: 'Benih Kedelai', satuan: 'kg', jumlah: 40},
+                {kategori: 'Pupuk', item: 'TSP', satuan: 'kg', jumlah: 100},
+                {kategori: 'Pupuk', item: 'KCl', satuan: 'kg', jumlah: 50},
+                {kategori: 'Pestisida', item: 'Insektisida', satuan: 'liter', jumlah: 1.5},
+                {kategori: 'Tenaga Kerja', item: 'Tenaga Kerja', satuan: 'HOK', jumlah: 30}
+            ]
+        };
+
+        let biayaItems = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID');
+            generateHargaInputs();
+            loadSavedPrices();
+            checkLoginStatus();
+        });
+
+        function checkLoginStatus() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            } else {
+                showLoginModal();
+            }
+        }
+
+        function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('Mohon isi email dan password!');
+                return;
+            }
+
+            const user = users[email];
+            if (!user || user.password !== password) {
+                alert('Email atau password tidak sesuai!');
+                return;
+            }
+
+            currentUser = {
+                email: email,
+                ...user
+            };
+
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showMainApp();
+        }
+
+        function logout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                showLoginModal();
+            }
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            // Hide main content
+            document.querySelector('.container').style.display = 'none';
+        }
+
+        function showMainApp() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.querySelector('.container').style.display = 'block';
+            
+            // Update user info display
+            document.getElementById('userInfo').classList.remove('hidden');
+            document.getElementById('dateInfo').classList.add('hidden');
+            
+            const roleText = currentUser.role === 'petani' ? '👨‍🌾 Petani' : 
+                            currentUser.role === 'penyuluh' ? '👨‍🏫 Penyuluh Pertanian' : 
+                            '👨‍💼 Administrator';
+            document.getElementById('userRole').textContent = roleText;
+            document.getElementById('userName').textContent = currentUser.name;
+
+            // Set role-based access
+            setupRoleBasedAccess();
+            
+            // Auto-fill petani data if logged in as petani
+            if (currentUser.role === 'petani') {
+                document.getElementById('namaPetani').value = currentUser.name;
+                if (currentUser.kecamatan) {
+                    document.getElementById('kecamatan').value = currentUser.kecamatan;
+                }
+            }
+
+            // Clear login form
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        function setupRoleBasedAccess() {
+            const hargaTab = document.getElementById('tab-harga');
+            const daftarTab = document.getElementById('tab-daftar');
+            const updateHargaCard = document.getElementById('updateHargaCard');
+            
+            if (currentUser.role === 'penyuluh' || currentUser.role === 'admin') {
+                // Penyuluh and Admin can access all features including price updates and registration
+                hargaTab.classList.remove('hidden');
+                daftarTab.classList.remove('hidden');
+                if (updateHargaCard) updateHargaCard.classList.remove('hidden');
+            } else {
+                // Petani cannot access price update tab and registration
+                hargaTab.classList.add('hidden');
+                daftarTab.classList.add('hidden');
+                if (updateHargaCard) updateHargaCard.classList.add('hidden');
+                // If currently on restricted tab, switch to beranda
+                const currentTab = document.querySelector('.tab-content:not(.hidden)');
+                if (currentTab && (currentTab.id === 'harga-content' || currentTab.id === 'daftar-content')) {
+                    showTab('beranda');
+                }
+            }
+
+            // Show admin controls if user is admin
+            const adminControls = document.getElementById('adminControls');
+            if (adminControls) {
+                if (currentUser.role === 'admin') {
+                    adminControls.classList.remove('hidden');
+                } else {
+                    adminControls.classList.add('hidden');
+                }
+            }
+
+            // Update welcome message
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                if (currentUser.role === 'petani') {
+                    welcomeMessage.textContent = `Selamat datang ${currentUser.name}! Kelola usaha tani Anda dengan lebih efisien.`;
+                } else if (currentUser.role === 'penyuluh') {
+                    welcomeMessage.textContent = `Selamat datang ${currentUser.name}! Bantu petani merencanakan usaha tani yang lebih baik.`;
+                } else {
+                    welcomeMessage.textContent = `Selamat datang ${currentUser.name}! Kelola sistem dan data harga untuk mendukung petani Tuban.`;
+                }
+            }
+        }
+
+        function handleRegistration() {
+            const nama = document.getElementById('regNama').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const role = document.getElementById('regRole').value;
+            const kecamatan = document.getElementById('regKecamatan').value;
+            const wilayah = document.getElementById('regWilayah').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+
+            // Validation
+            if (!nama || !email || !password || !role) {
+                alert('Mohon lengkapi semua field yang wajib diisi!');
+                return;
+            }
+
+            if (password.length < 8) {
+                alert('Password minimal 8 karakter!');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Konfirmasi password tidak sesuai!');
+                return;
+            }
+
+            if (role === 'petani' && !kecamatan) {
+                alert('Mohon pilih kecamatan untuk petani!');
+                return;
+            }
+
+            if ((role === 'penyuluh' || role === 'admin') && !wilayah) {
+                alert('Mohon isi wilayah kerja!');
+                return;
+            }
+
+            if (!agreeTerms) {
+                alert('Mohon setujui syarat dan ketentuan!');
+                return;
+            }
+
+            // Check if email already exists
+            if (users[email]) {
+                alert('Email sudah terdaftar! Silakan gunakan email lain.');
+                return;
+            }
+
+            // Create new user
+            const newUser = {
+                password: password,
+                role: role,
+                name: nama
+            };
+
+            if (role === 'petani') {
+                newUser.kecamatan = kecamatan;
+            } else {
+                newUser.wilayah = wilayah;
+            }
+
+            // Add to users database
+            users[email] = newUser;
+
+            // Show success message
+            alert(`Pendaftaran berhasil! Selamat datang ${nama}. Silakan login dengan akun baru Anda.`);
+
+            // Reset form
+            document.getElementById('registerForm').reset();
+            toggleKecamatanField();
+
+            // Redirect to login
+            showLoginFromRegister();
+        }
+
+        function handleLoginKeypress(event) {
+            if (event.key === 'Enter') {
+                login();
+            }
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-gray-500');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('tab-' + tabName).classList.remove('text-gray-500');
+        }
+
+        function showRegisterFromLogin() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.querySelector('.container').style.display = 'block';
+            showTab('daftar');
+        }
+
+        function showLoginFromRegister() {
+            showLoginModal();
+        }
+
+        function toggleKecamatanField() {
+            const role = document.getElementById('regRole').value;
+            const kecamatanField = document.getElementById('kecamatanField');
+            const wilayahField = document.getElementById('wilayahField');
+            
+            if (role === 'petani') {
+                kecamatanField.classList.remove('hidden');
+                wilayahField.classList.add('hidden');
+            } else if (role === 'penyuluh' || role === 'admin') {
+                kecamatanField.classList.add('hidden');
+                wilayahField.classList.remove('hidden');
+            } else {
+                kecamatanField.classList.add('hidden');
+                wilayahField.classList.add('hidden');
+            }
+        }
+
+        // Handle registration form
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleRegistration();
+                });
+            }
+        });
+
+        function updateDefaultItems() {
+            const tanaman = document.getElementById('jenisTanaman').value;
+            if (tanaman && templateTanaman[tanaman]) {
+                biayaItems = [...templateTanaman[tanaman]];
+                renderBiayaInputs();
+                hitungTotal();
+            }
+        }
+
+        function addBiayaInput() {
+            biayaItems.push({
+                kategori: 'Lainnya',
+                item: '',
+                satuan: 'unit',
+                jumlah: 0
+            });
+            renderBiayaInputs();
+        }
+
+        function renderBiayaInputs() {
+            const container = document.getElementById('biayaInputs');
+            container.innerHTML = '';
+
+            if (biayaItems.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p class="text-lg mb-2">📝 Belum ada item biaya</p>
+                        <p class="text-sm">Klik "Tambah Item Biaya" atau "Muat Template" untuk memulai</p>
+                    </div>
+                `;
+                return;
+            }
+
+            biayaItems.forEach((item, index) => {
+                const hargaItem = hargaData[item.item];
+                const hargaSatuan = hargaItem ? hargaItem.harga : (item.harga || 0);
+                const subtotal = item.jumlah * hargaSatuan;
+                
+                const div = document.createElement('div');
+                div.className = 'grid md:grid-cols-6 gap-4 p-4 bg-gray-50 rounded-lg border';
+                div.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                        <select onchange="updateItem(${index}, 'kategori', this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <option value="Benih" ${item.kategori === 'Benih' ? 'selected' : ''}>Benih</option>
+                            <option value="Pupuk" ${item.kategori === 'Pupuk' ? 'selected' : ''}>Pupuk</option>
+                            <option value="Pestisida" ${item.kategori === 'Pestisida' ? 'selected' : ''}>Pestisida</option>
+                            <option value="Tenaga Kerja" ${item.kategori === 'Tenaga Kerja' ? 'selected' : ''}>Tenaga Kerja</option>
+                            <option value="Lainnya" ${item.kategori === 'Lainnya' ? 'selected' : ''}>Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Item</label>
+                        <div class="relative">
+                            <input type="text" value="${item.item}" onchange="updateItem(${index}, 'item', this.value)" 
+                                   onfocus="showItemSuggestions(${index})" onblur="hideItemSuggestions(${index})"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Nama item">
+                            <div id="suggestions-${index}" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 hidden max-h-32 overflow-y-auto">
+                                <!-- Suggestions will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Satuan</label>
+                        <input type="text" value="${item.satuan}" onchange="updateItem(${index}, 'satuan', this.value)" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="kg/liter">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah</label>
+                        <input type="number" value="${item.jumlah}" onchange="updateItem(${index}, 'jumlah', parseFloat(this.value) || 0)" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" step="0.1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga Satuan</label>
+                        <input type="number" value="${hargaSatuan}" onchange="updateItem(${index}, 'harga', parseFloat(this.value) || 0)" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-yellow-50" 
+                               placeholder="0" title="Harga akan otomatis terisi jika item ada di database">
+                    </div>
+                    <div class="flex flex-col justify-between">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subtotal</label>
+                            <div class="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm font-semibold text-blue-800">
+                                ${formatRupiah(subtotal)}
+                            </div>
+                        </div>
+                        <button onclick="removeItem(${index})" class="mt-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm">
+                            🗑️
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateItem(index, field, value) {
+            biayaItems[index][field] = value;
+            
+            // Auto-fill price and unit when item is selected from database
+            if (field === 'item' && hargaData[value]) {
+                biayaItems[index].harga = hargaData[value].harga;
+                biayaItems[index].satuan = hargaData[value].satuan;
+                renderBiayaInputs();
+            }
+            
+            hitungTotal();
+        }
+
+        function searchPriceReference() {
+            const searchTerm = document.getElementById('priceSearchInput').value.toLowerCase();
+            const resultsContainer = document.getElementById('priceSearchResults');
+            
+            if (searchTerm.length < 2) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            const matchingItems = Object.keys(hargaData).filter(item => 
+                item.toLowerCase().includes(searchTerm)
+            );
+
+            if (matchingItems.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="text-sm text-gray-500 p-2">
+                        Tidak ditemukan item dengan kata kunci "${searchTerm}"
+                    </div>
+                `;
+                return;
+            }
+
+            resultsContainer.innerHTML = matchingItems.slice(0, 5).map(item => {
+                const itemData = hargaData[item];
+                return `
+                    <div class="flex justify-between items-center p-2 bg-white rounded border hover:bg-blue-50 cursor-pointer"
+                         onclick="addItemFromSearch('${item}')">
+                        <div>
+                            <span class="font-medium text-gray-800">${item}</span>
+                            <span class="text-xs text-gray-500 ml-2">(${itemData.kategori})</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-blue-600">${formatRupiah(itemData.harga)}</div>
+                            <div class="text-xs text-gray-500">per ${itemData.satuan}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showAllPrices() {
+            const resultsContainer = document.getElementById('priceSearchResults');
+            const allItems = Object.keys(hargaData);
+            
+            resultsContainer.innerHTML = `
+                <div class="text-sm font-semibold text-blue-800 mb-2">📋 Semua Harga Acuan (${allItems.length} item)</div>
+                <div class="grid gap-2 max-h-60 overflow-y-auto">
+                    ${allItems.map(item => {
+                        const itemData = hargaData[item];
+                        return `
+                            <div class="flex justify-between items-center p-2 bg-white rounded border hover:bg-blue-50 cursor-pointer text-sm"
+                                 onclick="addItemFromSearch('${item}')">
+                                <div>
+                                    <span class="font-medium text-gray-800">${item}</span>
+                                    <span class="text-xs text-gray-500 ml-2">(${itemData.kategori})</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold text-blue-600">${formatRupiah(itemData.harga)}</div>
+                                    <div class="text-xs text-gray-500">per ${itemData.satuan}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function addItemFromSearch(itemName) {
+            const itemData = hargaData[itemName];
+            biayaItems.push({
+                kategori: itemData.kategori,
+                item: itemName,
+                satuan: itemData.satuan,
+                jumlah: 1,
+                harga: itemData.harga
+            });
+            renderBiayaInputs();
+            hitungTotal();
+            
+            // Clear search
+            document.getElementById('priceSearchInput').value = '';
+            document.getElementById('priceSearchResults').innerHTML = '';
+        }
+
+        function showItemSuggestions(index) {
+            const input = event.target;
+            const suggestionsDiv = document.getElementById(`suggestions-${index}`);
+            const searchTerm = input.value.toLowerCase();
+            
+            const matchingItems = Object.keys(hargaData).filter(item => 
+                item.toLowerCase().includes(searchTerm)
+            ).slice(0, 5);
+
+            if (matchingItems.length > 0) {
+                suggestionsDiv.innerHTML = matchingItems.map(item => `
+                    <div class="p-2 hover:bg-blue-50 cursor-pointer text-sm" 
+                         onmousedown="selectSuggestion(${index}, '${item}')">
+                        ${item} - ${formatRupiah(hargaData[item].harga)}/${hargaData[item].satuan}
+                    </div>
+                `).join('');
+                suggestionsDiv.classList.remove('hidden');
+            }
+        }
+
+        function hideItemSuggestions(index) {
+            setTimeout(() => {
+                document.getElementById(`suggestions-${index}`).classList.add('hidden');
+            }, 200);
+        }
+
+        function selectSuggestion(index, itemName) {
+            const itemData = hargaData[itemName];
+            biayaItems[index].item = itemName;
+            biayaItems[index].harga = itemData.harga;
+            biayaItems[index].satuan = itemData.satuan;
+            biayaItems[index].kategori = itemData.kategori;
+            renderBiayaInputs();
+            hitungTotal();
+        }
+
+        function loadTemplateItems() {
+            const tanaman = document.getElementById('jenisTanaman').value;
+            if (!tanaman) {
+                alert('Silakan pilih jenis tanaman terlebih dahulu!');
+                return;
+            }
+            
+            if (templateTanaman[tanaman]) {
+                if (biayaItems.length > 0) {
+                    if (!confirm('Ini akan mengganti semua item yang sudah ada. Lanjutkan?')) {
+                        return;
+                    }
+                }
+                biayaItems = [...templateTanaman[tanaman]];
+                renderBiayaInputs();
+                hitungTotal();
+            } else {
+                alert('Template untuk tanaman ini belum tersedia.');
+            }
+        }
+
+        function removeItem(index) {
+            biayaItems.splice(index, 1);
+            renderBiayaInputs();
+            hitungTotal();
+        }
+
+        function hitungTotal() {
+            const totals = {
+                Benih: 0,
+                Pupuk: 0,
+                Pestisida: 0,
+                'Tenaga Kerja': 0,
+                Lainnya: 0
+            };
+
+            biayaItems.forEach(item => {
+                const hargaItem = hargaData[item.item];
+                const harga = hargaItem ? hargaItem.harga : (item.harga || 0);
+                const subtotal = item.jumlah * harga;
+                totals[item.kategori] += subtotal;
+            });
+
+            document.getElementById('totalBenih').textContent = formatRupiah(totals.Benih);
+            document.getElementById('totalPupuk').textContent = formatRupiah(totals.Pupuk);
+            document.getElementById('totalPestisida').textContent = formatRupiah(totals.Pestisida);
+            document.getElementById('totalTenagaKerja').textContent = formatRupiah(totals['Tenaga Kerja']);
+            document.getElementById('totalLainnya').textContent = formatRupiah(totals.Lainnya);
+
+            const grandTotal = Object.values(totals).reduce((sum, val) => sum + val, 0);
+            document.getElementById('totalBiaya').textContent = formatRupiah(grandTotal);
+        }
+
+        function hitungAnalisis() {
+            showTab('analisis');
+        }
+
+        function hitungKelayakan() {
+            const produksi = parseFloat(document.getElementById('produksi').value) || 0;
+            const hargaJual = parseFloat(document.getElementById('hargaJual').value) || 0;
+            const luasLahan = parseFloat(document.getElementById('luasLahan').value) || 1;
+            
+            const totalBiayaText = document.getElementById('totalBiaya').textContent;
+            const totalBiaya = parseFloat(totalBiayaText.replace(/[^\d]/g, '')) || 0;
+            
+            const totalPenerimaan = produksi * 1000 * hargaJual * luasLahan; // produksi dalam ton, convert ke kg
+            const keuntungan = totalPenerimaan - totalBiaya;
+            const rcRatio = totalBiaya > 0 ? totalPenerimaan / totalBiaya : 0;
+            const bep = hargaJual > 0 ? totalBiaya / (produksi * 1000 * luasLahan) : 0;
+
+            let status = '';
+            let statusColor = '';
+            if (rcRatio > 1) {
+                status = 'LAYAK';
+                statusColor = 'text-green-600 bg-green-100';
+            } else {
+                status = 'TIDAK LAYAK';
+                statusColor = 'text-red-600 bg-red-100';
+            }
+
+            document.getElementById('hasilAnalisis').innerHTML = `
+                <div class="space-y-4">
+                    <div class="p-4 ${statusColor} rounded-lg text-center">
+                        <h4 class="text-xl font-bold">${status}</h4>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-blue-800">Total Penerimaan</h5>
+                            <p class="text-2xl font-bold text-blue-600">${formatRupiah(totalPenerimaan)}</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-red-800">Total Biaya</h5>
+                            <p class="text-2xl font-bold text-red-600">${formatRupiah(totalBiaya)}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-green-800">Keuntungan</h5>
+                            <p class="text-2xl font-bold text-green-600">${formatRupiah(keuntungan)}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h5 class="font-semibold text-purple-800">R/C Ratio</h5>
+                            <p class="text-2xl font-bold text-purple-600">${rcRatio.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <h5 class="font-semibold text-yellow-800">Break Even Point (BEP)</h5>
+                        <p class="text-lg font-bold text-yellow-600">${formatRupiah(bep)}/kg</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateHargaInputs() {
+            const container = document.getElementById('hargaInputs');
+            const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+            container.innerHTML = '';
+
+            Object.keys(hargaData).forEach(item => {
+                const itemData = hargaData[item];
+                
+                // Filter by search term
+                if (searchTerm && !item.toLowerCase().includes(searchTerm)) {
+                    return;
+                }
+                
+                // Filter by category
+                if (currentFilter !== 'all' && itemData.kategori !== currentFilter) {
+                    return;
+                }
+
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 p-4 rounded-lg border hover:border-blue-300 transition-colors';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <label class="block text-sm font-semibold text-gray-700">${item}</label>
+                        <button onclick="hapusInput('${item}')" class="text-red-500 hover:text-red-700 text-xs">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">${itemData.kategori}</span>
+                        <span class="ml-2">Satuan: ${itemData.satuan}</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="text-sm text-gray-500 mr-2">Rp</span>
+                        <input type="number" id="harga-${item}" value="${itemData.harga}" 
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm input-focus">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            if (container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                        <p>Tidak ada input yang ditemukan</p>
+                        <p class="text-sm mt-2">Coba ubah kata kunci pencarian atau filter kategori</p>
+                    </div>
+                `;
+            }
+        }
+
+        function filterHargaInputs() {
+            generateHargaInputs();
+        }
+
+        function filterByCategory(category) {
+            currentFilter = category;
+            
+            // Update button styles
+            document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            document.getElementById(`filter-${category}`).classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById(`filter-${category}`).classList.add('bg-blue-600', 'text-white');
+            
+            generateHargaInputs();
+        }
+
+        function showTambahInputModal() {
+            document.getElementById('tambahInputModal').classList.remove('hidden');
+        }
+
+        function closeTambahInputModal() {
+            document.getElementById('tambahInputModal').classList.add('hidden');
+            // Reset form
+            document.getElementById('newInputName').value = '';
+            document.getElementById('newInputPrice').value = '';
+            document.getElementById('newInputUnit').value = '';
+            document.getElementById('newInputCategory').value = 'Benih';
+        }
+
+        function tambahInputBaru() {
+            const name = document.getElementById('newInputName').value.trim();
+            const price = parseFloat(document.getElementById('newInputPrice').value) || 0;
+            const unit = document.getElementById('newInputUnit').value.trim();
+            const category = document.getElementById('newInputCategory').value;
+
+            if (!name || !unit) {
+                alert('Mohon isi nama input dan satuan!');
+                return;
+            }
+
+            if (hargaData[name]) {
+                alert('Input dengan nama tersebut sudah ada!');
+                return;
+            }
+
+            hargaData[name] = {
+                harga: price,
+                kategori: category,
+                satuan: unit
+            };
+
+            generateHargaInputs();
+            closeTambahInputModal();
+            
+            // Show success message
+            alert(`Input "${name}" berhasil ditambahkan!`);
+        }
+
+        function hapusInput(itemName) {
+            if (confirm(`Apakah Anda yakin ingin menghapus "${itemName}"?`)) {
+                delete hargaData[itemName];
+                generateHargaInputs();
+                hitungTotal();
+            }
+        }
+
+        function simpanHarga() {
+            Object.keys(hargaData).forEach(item => {
+                const input = document.getElementById(`harga-${item}`);
+                if (input) {
+                    hargaData[item].harga = parseFloat(input.value) || 0;
+                }
+            });
+            
+            // Save to history
+            savePriceHistory('Manual Update', 'Harga diupdate secara manual');
+            
+            localStorage.setItem('hargaData', JSON.stringify(hargaData));
+            localStorage.setItem('lastPriceUpdate', new Date().toISOString());
+            updateLastUpdateTime();
+            hitungTotal();
+            
+            // Show success message
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Tersimpan!';
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('bg-green-600');
+            }, 2000);
+        }
+
+        function resetHarga() {
+            // Reset to default values
+            hargaData = {
+                'Benih Padi': {harga: 12000, kategori: 'Benih', satuan: 'kg'},
+                'Benih Jagung': {harga: 85000, kategori: 'Benih', satuan: 'kg'},
+                'Benih Kedelai': {harga: 18000, kategori: 'Benih', satuan: 'kg'},
+                'Benih Cabai': {harga: 450000, kategori: 'Benih', satuan: 'kg'},
+                'Benih Tomat': {harga: 380000, kategori: 'Benih', satuan: 'kg'},
+                'Urea': {harga: 2300, kategori: 'Pupuk', satuan: 'kg'},
+                'NPK': {harga: 2800, kategori: 'Pupuk', satuan: 'kg'},
+                'TSP': {harga: 3200, kategori: 'Pupuk', satuan: 'kg'},
+                'KCl': {harga: 4500, kategori: 'Pupuk', satuan: 'kg'},
+                'Pupuk Kandang': {harga: 800, kategori: 'Pupuk', satuan: 'kg'},
+                'Insektisida': {harga: 85000, kategori: 'Pestisida', satuan: 'liter'},
+                'Fungisida': {harga: 95000, kategori: 'Pestisida', satuan: 'liter'},
+                'Herbisida': {harga: 75000, kategori: 'Pestisida', satuan: 'liter'},
+                'Tenaga Kerja': {harga: 80000, kategori: 'Tenaga Kerja', satuan: 'HOK'},
+                'Sewa Traktor': {harga: 350000, kategori: 'Lainnya', satuan: 'paket'},
+                'BBM': {harga: 10000, kategori: 'Lainnya', satuan: 'liter'}
+            };
+            
+            generateHargaInputs();
+            localStorage.removeItem('hargaData');
+            hitungTotal();
+        }
+
+        function exportHargaToExcel() {
+            const headerData = [
+                ['DAFTAR HARGA INPUT USAHA TANI'],
+                ['KABUPATEN TUBAN'],
+                ['Tanggal Update:', new Date().toLocaleDateString('id-ID')],
+                [''],
+                ['No', 'Nama Input', 'Kategori', 'Satuan', 'Harga (Rp)']
+            ];
+
+            const priceData = Object.keys(hargaData).map((item, index) => {
+                const itemData = hargaData[item];
+                return [
+                    index + 1,
+                    item,
+                    itemData.kategori,
+                    itemData.satuan,
+                    itemData.harga
+                ];
+            });
+
+            const allData = [...headerData, ...priceData];
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(allData);
+
+            // Set column widths
+            ws['!cols'] = [
+                {wch: 5},   // No
+                {wch: 25},  // Nama Input
+                {wch: 15},  // Kategori
+                {wch: 10},  // Satuan
+                {wch: 15}   // Harga
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Daftar Harga Input");
+
+            // Generate filename
+            const filename = `Daftar_Harga_Input_Tuban_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+            // Save file
+            XLSX.writeFile(wb, filename);
+        }
+
+        function loadSavedPrices() {
+            const saved = localStorage.getItem('hargaData');
+            if (saved) {
+                hargaData = JSON.parse(saved);
+                generateHargaInputs();
+            }
+            updateLastUpdateTime();
+        }
+
+        function updateLastUpdateTime() {
+            const lastUpdate = localStorage.getItem('lastPriceUpdate');
+            const timeElement = document.getElementById('lastUpdateTime');
+            if (timeElement) {
+                if (lastUpdate) {
+                    timeElement.textContent = new Date(lastUpdate).toLocaleString('id-ID');
+                } else {
+                    timeElement.textContent = 'Belum ada update';
+                }
+            }
+        }
+
+        function bulkUpdatePrices() {
+            const percentage = prompt('Masukkan persentase kenaikan/penurunan harga (contoh: 5 untuk naik 5%, -3 untuk turun 3%):');
+            if (percentage === null) return;
+            
+            const percent = parseFloat(percentage);
+            if (isNaN(percent)) {
+                alert('Masukkan angka yang valid!');
+                return;
+            }
+
+            if (!confirm(`Apakah Anda yakin ingin mengubah semua harga sebesar ${percent}%?`)) {
+                return;
+            }
+
+            // Save current prices to history
+            savePriceHistory('Bulk Update', `${percent}% adjustment`);
+
+            // Update all prices
+            Object.keys(hargaData).forEach(item => {
+                const oldPrice = hargaData[item].harga;
+                const newPrice = Math.round(oldPrice * (1 + percent / 100));
+                hargaData[item].harga = newPrice;
+            });
+
+            localStorage.setItem('hargaData', JSON.stringify(hargaData));
+            localStorage.setItem('lastPriceUpdate', new Date().toISOString());
+            generateHargaInputs();
+            updateLastUpdateTime();
+            
+            alert(`Berhasil mengupdate semua harga dengan perubahan ${percent}%!`);
+        }
+
+        function importPricesFromExcel() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xlsx,.xls';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                        let importCount = 0;
+                        savePriceHistory('Import Excel', `Imported from ${file.name}`);
+
+                        jsonData.forEach(row => {
+                            const itemName = row['Nama Input'] || row['Item'] || row['nama_input'];
+                            const price = parseFloat(row['Harga'] || row['Price'] || row['harga']);
+                            const category = row['Kategori'] || row['Category'] || row['kategori'];
+                            const unit = row['Satuan'] || row['Unit'] || row['satuan'];
+
+                            if (itemName && !isNaN(price)) {
+                                if (hargaData[itemName]) {
+                                    hargaData[itemName].harga = price;
+                                    if (category) hargaData[itemName].kategori = category;
+                                    if (unit) hargaData[itemName].satuan = unit;
+                                } else {
+                                    hargaData[itemName] = {
+                                        harga: price,
+                                        kategori: category || 'Lainnya',
+                                        satuan: unit || 'unit'
+                                    };
+                                }
+                                importCount++;
+                            }
+                        });
+
+                        localStorage.setItem('hargaData', JSON.stringify(hargaData));
+                        localStorage.setItem('lastPriceUpdate', new Date().toISOString());
+                        generateHargaInputs();
+                        updateLastUpdateTime();
+                        
+                        alert(`Berhasil mengimport ${importCount} item harga dari Excel!`);
+                    } catch (error) {
+                        alert('Error membaca file Excel. Pastikan format file sesuai.');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            };
+            input.click();
+        }
+
+        function showPriceHistory() {
+            if (priceHistory.length === 0) {
+                alert('Belum ada riwayat perubahan harga.');
+                return;
+            }
+
+            let historyHtml = `
+                <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-lg max-w-4xl w-full max-h-96 overflow-y-auto p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800">📈 Riwayat Perubahan Harga</h3>
+                            <button onclick="closePriceHistory()" class="text-gray-500 hover:text-gray-700">✕</button>
+                        </div>
+                        <div class="space-y-3">
+            `;
+
+            priceHistory.slice(-20).reverse().forEach(entry => {
+                historyHtml += `
+                    <div class="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-blue-800">${entry.action}</p>
+                                <p class="text-sm text-blue-600">${entry.description}</p>
+                                <p class="text-xs text-blue-500">Oleh: ${entry.user}</p>
+                            </div>
+                            <p class="text-xs text-blue-500">${new Date(entry.timestamp).toLocaleString('id-ID')}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            historyHtml += `
+                        </div>
+                        <div class="mt-4 text-center">
+                            <button onclick="exportPriceHistory()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold mr-2">
+                                📊 Export Riwayat
+                            </button>
+                            <button onclick="clearPriceHistory()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold">
+                                🗑️ Hapus Riwayat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', historyHtml);
+        }
+
+        function closePriceHistory() {
+            const modal = document.querySelector('.fixed.inset-0.bg-black.bg-opacity-50');
+            if (modal) modal.remove();
+        }
+
+        function savePriceHistory(action, description) {
+            const entry = {
+                timestamp: new Date().toISOString(),
+                action: action,
+                description: description,
+                user: currentUser ? currentUser.name : 'Unknown',
+                userRole: currentUser ? currentUser.role : 'Unknown'
+            };
+            
+            priceHistory.push(entry);
+            localStorage.setItem('priceHistory', JSON.stringify(priceHistory));
+        }
+
+        function exportPriceHistory() {
+            const historyData = [
+                ['Tanggal', 'Waktu', 'Aksi', 'Deskripsi', 'User', 'Role'],
+                ...priceHistory.map(entry => [
+                    new Date(entry.timestamp).toLocaleDateString('id-ID'),
+                    new Date(entry.timestamp).toLocaleTimeString('id-ID'),
+                    entry.action,
+                    entry.description,
+                    entry.user,
+                    entry.userRole
+                ])
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(historyData);
+            XLSX.utils.book_append_sheet(wb, ws, "Riwayat Harga");
+            XLSX.writeFile(wb, `Riwayat_Harga_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function clearPriceHistory() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat perubahan harga?')) {
+                priceHistory = [];
+                localStorage.removeItem('priceHistory');
+                closePriceHistory();
+                alert('Riwayat perubahan harga telah dihapus.');
+            }
+        }
+
+        function exportToExcel() {
+            const namaPetani = document.getElementById('namaPetani').value || 'Tidak Diisi';
+            const kecamatan = document.getElementById('kecamatan').value || 'Tidak Diisi';
+            const jenisTanaman = document.getElementById('jenisTanaman').value || 'Tidak Diisi';
+            const luasLahan = document.getElementById('luasLahan').value || '0';
+
+            // Prepare data for Excel
+            const headerData = [
+                ['RANCANGAN ANGGARAN BIAYA USAHA TANI'],
+                ['KABUPATEN TUBAN'],
+                [''],
+                ['Nama Petani:', namaPetani],
+                ['Kecamatan:', kecamatan],
+                ['Jenis Tanaman:', jenisTanaman],
+                ['Luas Lahan (Ha):', luasLahan],
+                ['Tanggal:', new Date().toLocaleDateString('id-ID')],
+                [''],
+                ['No', 'Kategori', 'Item', 'Satuan', 'Jumlah', 'Harga Satuan', 'Subtotal']
+            ];
+
+            const detailData = biayaItems.map((item, index) => {
+                const hargaItem = hargaData[item.item];
+                const harga = hargaItem ? hargaItem.harga : (item.harga || 0);
+                const subtotal = item.jumlah * harga;
+                return [
+                    index + 1,
+                    item.kategori,
+                    item.item,
+                    item.satuan,
+                    item.jumlah,
+                    harga,
+                    subtotal
+                ];
+            });
+
+            // Calculate totals
+            const totals = {
+                Benih: 0,
+                Pupuk: 0,
+                Pestisida: 0,
+                'Tenaga Kerja': 0,
+                Lainnya: 0
+            };
+
+            biayaItems.forEach(item => {
+                const hargaItem = hargaData[item.item];
+                const harga = hargaItem ? hargaItem.harga : (item.harga || 0);
+                const subtotal = item.jumlah * harga;
+                totals[item.kategori] += subtotal;
+            });
+
+            const grandTotal = Object.values(totals).reduce((sum, val) => sum + val, 0);
+
+            const summaryData = [
+                [''],
+                ['RINGKASAN BIAYA'],
+                ['Total Biaya Benih:', '', '', '', '', '', totals.Benih],
+                ['Total Biaya Pupuk:', '', '', '', '', '', totals.Pupuk],
+                ['Total Biaya Pestisida:', '', '', '', '', '', totals.Pestisida],
+                ['Total Biaya Tenaga Kerja:', '', '', '', '', '', totals['Tenaga Kerja']],
+                ['Total Biaya Lainnya:', '', '', '', '', '', totals.Lainnya],
+                [''],
+                ['TOTAL BIAYA KESELURUHAN:', '', '', '', '', '', grandTotal]
+            ];
+
+            // Combine all data
+            const allData = [...headerData, ...detailData, ...summaryData];
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(allData);
+
+            // Add some styling (basic)
+            ws['!cols'] = [
+                {wch: 5},   // No
+                {wch: 15},  // Kategori
+                {wch: 20},  // Item
+                {wch: 10},  // Satuan
+                {wch: 10},  // Jumlah
+                {wch: 15},  // Harga Satuan
+                {wch: 15}   // Subtotal
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "RAB Usaha Tani");
+
+            // Generate filename
+            const filename = `RAB_${jenisTanaman}_${namaPetani.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+            // Save file
+            XLSX.writeFile(wb, filename);
+        }
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(angka);
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9701452437740d3d',t:'MTc1NTM1MDg1Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
